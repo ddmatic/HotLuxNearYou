@@ -40,7 +40,7 @@ while True:
                         price = value_span["data-value"]
 
                 # Extract features: area, rooms, floor
-                features = {"kvadratura": None, "broj_soba": None, "spratnost": None}
+                features = {"area": None, "rooms": None, "floor": None}
                 feature_list = info_div.find_all("li", class_="col-p-1-3")
                 for li in feature_list:
                     legend = li.find("span", class_="legend")
@@ -50,18 +50,18 @@ while True:
                     value = li.get_text(strip=True).replace(label, "").strip()
 
                     if label == "Kvadratura":
-                        features["kvadratura"] = value.replace("m²", "").replace("m2", "").strip()
+                        features["area"] = value.replace("m²", "").replace("m2", "").strip()
                     elif label == "Broj soba":
-                        features["broj_soba"] = value
+                        features["rooms"] = value
                     elif label == "Spratnost":
-                        features["spratnost"] = value
+                        features["floor"] = value
 
                 ads.append({
                     "url": href,
                     "price": price,
-                    "area": features["kvadratura"],
-                    "rooms": features["broj_soba"],
-                    "floor": features["spratnost"]
+                    "area": features["area"],
+                    "rooms": features["rooms"],
+                    "floor": features["floor"]
                 })
 
     page += 1
