@@ -1,0 +1,26 @@
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# .IDE folders (for IDEs like PyCharm, VSCode, etc.)
+.idea/
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Excel files (e.g., .xlsx) - Optional, depending on whether you want to track them
+data/*.xlsx
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Auto Running Script
+"Hot Lux Near You Runner.bat"
