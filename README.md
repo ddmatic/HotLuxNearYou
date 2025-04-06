@@ -16,14 +16,14 @@ This is the **HotLuxNearYou** project—designed to help streamline the apartmen
 - Reduce the frustration of missing out on desirable apartments.
 - On the first day, a file `apts_tdy.xlsx` will be created and updated daily.
 - On the second day, a file `apts_ytd.xlsx` will be created to track yesterday's data _(Since you get new `apts_tdy.xlsx`)_. 
-- All the data files will be stored in a `data` folder, which will be automatically created on the first run.
-- On the first run, a `scripts` folder will be created, containing the `Hot Lux Near You Runner.bat` file, which can be used to easily run the application.
+- All the data files will be stored in a `data` folder, automatically created on the first run.
+- On the first run, a `scripts` folder will be created, containing the `Hot Lux Near You Runner.bat` file, which can be used to run the application easily.
 
 ## Setup:
 1. Clone the repository.
 2. Install `reqs.txt`
 3. Run the script periodically for the latest updates.
-4. On the first run, a `scripts` folder will be created, where you'll find the `Hot Lux Near You Runner.bat` file to launch the app.
+4. On the first run, a `scripts` folder will be created, where you'll find the `Hot Lux Near You Runner.bat` file to launch the app (in case you prefer to run stuff that way). In addition, data folder will be created where your actual data will be stored.
 
 ## License:
 Feel free to adapt this script for your own apartment-hunting needs. All the configuration options are in the `config.py` file.
