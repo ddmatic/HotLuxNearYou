@@ -55,6 +55,10 @@ def create_hyperlink(url):
 def create_or_update_bat_file():
     src_dir = os.path.join(ROOT, "src")
 
+    if os.path.exists(BAT_FILE_PATH):
+        print("\n.bat file ok!\n")
+        return
+
     # Generate the full path for the .bat file
     bat_content = f'''@echo off
     cd /d "{src_dir}"
@@ -66,7 +70,7 @@ def create_or_update_bat_file():
     with open(BAT_FILE_PATH, 'w') as bat_file:
         bat_file.write(bat_content)
 
-    print(f"\nCreated or updated the .bat file at {BAT_FILE_PATH}")
+    print(f"\nCreated the .bat file at {BAT_FILE_PATH}")
 
 def create_paths():
     os.makedirs(DATA_DIR, exist_ok=True)

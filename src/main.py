@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import datetime as dt
 import funclyb as fl
-from config import DATA_DIR, SCRIPTS_DIR, TDY_PATH, YTD_PATH, SRC, PGR, HEADERS
+from config import TDY_PATH, YTD_PATH, SRC, PGR, HEADERS
 
 fl.create_paths()
 
@@ -82,9 +82,9 @@ df_today["ReportDate"] = dt.date.today()
 # Handle Existing apts_ytd.xlsx
 if os.path.exists(YTD_PATH):
     os.remove(YTD_PATH)
-    print("\nExisting apts_ytd.xlsx deleted.\n")
+    print("\nExisting apts_ytd.xlsx deleted.")
 else:
-    print("\napts_ytd.xlsx does not exist. Skipping deletion.\n")
+    print("\napts_ytd.xlsx does not exist. Skipping deletion.")
 
 # Rename apts_tdy.xlsx to apts_ytd.xlsx if it exists
 if os.path.exists(TDY_PATH):
