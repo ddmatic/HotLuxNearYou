@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import datetime as dt
 import funclyb as fl
-from config import TDY_PATH, YTD_PATH, SRC, PGR, HEADERS
+from config import TDY_PATH, YTD_PATH, SRC, PGR, HEADERS, DATA_DIR
 
 fl.create_paths()
 
@@ -19,7 +19,8 @@ while True:
     r = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(r.content, "html.parser")
 
-    listings = soup.find_all("div", class_=re.compile(r"product-item product-list-item (Premium|Standard) real-estates my-product-placeholder"))
+    listings = soup.find_all("div", class_=re.compile(r"product-item product-list-item (Premium|Standard|Top) "
+                                                      r"real-estates my-product-placeholder"))
 
     if not listings:
         print("\nNo more listings found. Stopping.\n")
@@ -78,6 +79,18 @@ df_today = df_today.drop(columns=["floor"])
 # Adding =HYPERLINK() for Excel and Date info
 df_today["GoToLink"] = df_today["URL"].apply(lambda x: fl.create_hyperlink(x))
 df_today["ReportDate"] = dt.date.today()
+
+df_loaded = pd.read_excel(DATA_DIR+"\\apts_tdy.xlsx") # Loading existing data from yesterday
+new_rows = fl.append_new_rows(df_loaded, df_today)
+df_today = pd.concat([df_loaded, new_rows])
+
+df_today["AdText2"] = df_today.apply(
+    lambda row: fl.scrape_single_ad(row["URL"]) if pd.isna(row["AdText"]) or not row["AdText"] else row["AdText"],
+    axis=1
+)
+df_today["AdText"] = df_today["AdText"].fillna(df_today["AdText2"])
+
+df_today = df_today.drop(columns=["AdText2"])
 
 # Handle Existing apts_ytd.xlsx
 if os.path.exists(YTD_PATH):
