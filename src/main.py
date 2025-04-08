@@ -11,6 +11,7 @@ fl.create_paths()
 
 ads = []
 page = 1
+DO_AI_STUFF = True
 
 while True:
     url = SRC + PGR + str(page)
@@ -76,12 +77,10 @@ df_today = pd.DataFrame(ads)
 df_today[["Floor", "Max Floor"]] = df_today["floor"].str.split("/", expand=True)
 df_today = df_today.drop(columns=["floor"])
 
-# Adding =HYPERLINK() for Excel and Date info
-df_today["GoToLink"] = df_today["URL"].apply(lambda x: fl.create_hyperlink(x))
-df_today["ReportDate"] = dt.date.today()
-
 df_loaded = pd.read_excel(DATA_DIR+"\\apts_tdy.xlsx") # Loading existing data from yesterday
+df_loaded = df_loaded.dropna(axis=1, how="all")
 new_rows = fl.append_new_rows(df_loaded, df_today)
+new_rows = new_rows.dropna(axis=1, how="all")
 df_today = pd.concat([df_loaded, new_rows])
 
 df_today["AdText2"] = df_today.apply(
@@ -91,6 +90,25 @@ df_today["AdText2"] = df_today.apply(
 df_today["AdText"] = df_today["AdText"].fillna(df_today["AdText2"])
 
 df_today = df_today.drop(columns=["AdText2"])
+
+# Adding =HYPERLINK() for Excel and Date info
+df_today["GoToLink"] = df_today["URL"].apply(lambda x: fl.create_hyperlink(x))
+df_today["ReportDate"] = dt.date.today()
+
+if DO_AI_STUFF:
+    # Initialize AI
+    client = fl.create_ai_client()
+    df_today["AISays"] = df_today["AdText"].apply(lambda x: fl.ai_analyze(x, client))
+
+    df_today["AISays2"] = df_today.apply(
+        lambda row: fl.ai_analyze(row["AdText"], client) if pd.isna(row["AISays"]) or not row["AISays"] else row["AISays"],
+        axis=1
+    )
+    df_today["AISays"] = df_today["AISays"].fillna(df_today["AISays2"])
+
+    df_today = df_today.drop(columns=["AISays2"])
+
+df_today[["AIGarage", "AIAlert"]] = df_today["AISays"].str.split(" > ", expand=True)
 
 # Handle Existing apts_ytd.xlsx
 if os.path.exists(YTD_PATH):

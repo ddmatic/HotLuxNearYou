@@ -6,6 +6,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import pandas as pd
+from openai import OpenAI
+from secretconfig import APIKEY, PROMPTTXT
 
 
 def roman_to_arabic(roman):
@@ -127,3 +129,23 @@ def append_new_rows(df_old: pd.DataFrame, df_new: pd.DataFrame) -> pd.DataFrame:
     new_urls = df_new[~df_new[compare_col].isin(df_old[compare_col])]
 
     return new_urls
+
+
+def create_ai_client():
+    client = OpenAI(
+        api_key=APIKEY
+    )
+
+    return client
+
+
+def ai_analyze(ad_text, client):
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        store=True,
+        messages=[
+            {"role": "user", "content": f"{PROMPTTXT + ad_text}"}
+        ]
+    )
+
+    return completion.choices[0].message.content

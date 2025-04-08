@@ -23,4 +23,7 @@ data/*.xlsx
 *.tmp
 
 # Auto Running Script
-"Hot Lux Near You Runner.bat"
+scripts/"Hot Lux Near You Runner.bat"
+
+# Config with API keys and similar
+src/secretconfig.py
