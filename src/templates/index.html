@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HotLuxNearYou</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    .status-msg {
+        margin-top: 20px;
+        font-size: 1.2em;
+    }
+  </style>
+</head>
+<body class="bg-light d-flex flex-column align-items-center p-5">
+
+  <div class="card shadow p-4" style="max-width: 800px; width: 100%;">
+    <h2 class="mb-4 text-center">🏘️ HotLuxNearYou</h2>
+
+    <button id="run-btn" class="btn btn-primary w-100 mb-3">
+      ▶️ Run Apartment Script
+    </button>
+
+    <div class="text-center">
+      <div id="spinner" class="spinner-border text-primary d-none" role="status"></div>
+      <div id="status" class="status-msg mt-3"></div>
+    </div>
+
+    <hr>
+
+    <a href="/download" class="btn btn-success w-100 mt-2">⬇️ Download Excel</a>
+
+    <hr>
+
+    <h3 class="mt-4 text-center">New Listings</h3>
+
+    <!-- Filters for columns -->
+    <div class="row mb-3">
+      <div class="col-3">
+        <label for="filter-price">Price</label>
+        <select id="filter-price" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-area">Area</label>
+        <select id="filter-area" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-rooms">Rooms</label>
+        <select id="filter-rooms" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-floor">Floor</label>
+        <select id="filter-floor" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table to display new listings -->
+    <table class="table table-bordered mt-3" id="new-listings-table">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Price</th>
+          <th>Area</th>
+          <th>Rooms</th>
+          <th>Floor</th>
+          <th>Max Floor</th>
+          <th>ReportDate</th>
+<!--          <th>AdText</th>-->
+<!--          <th>AISays</th>-->
+<!--          <th>GoToLink</th>-->
+        </tr>
+      </thead>
+      <tbody>
+        {% if new_listings %}
+          {% for listing in new_listings %}
+            <tr>
+              <td><a href="{{ listing['URL'] }}" target="_blank">GoToLink</a></td>
+              <td>{{ listing['Price'] }}</td>
+              <td>{{ listing['Area'] }}</td>
+              <td>{{ listing['Rooms'] }}</td>
+              <td>{{ listing['Floor'] }}</td>
+              <td>{{ listing['Max Floor'] }}</td>
+              <td>{{ listing['ReportDate'] }}</td>
+<!--              <td>{{ listing['AdText'] }}</td>-->
+<!--              <td>{{ listing['AISays'] }}</td>-->
+<!--              <td><a href="{{ listing['GoToLink'] }}" target="_blank">Go</a></td>-->
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="10">No data available.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <hr>
+
+    <h3 class="mt-4 text-center">All Listings (src)</h3>
+
+    <!-- Filters for columns -->
+    <div class="row mb-3">
+      <div class="col-3">
+        <label for="filter-src-price">Price</label>
+        <select id="filter-src-price" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-src-area">Area</label>
+        <select id="filter-src-area" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-src-rooms">Rooms</label>
+        <select id="filter-src-rooms" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="col-3">
+        <label for="filter-src-floor">Floor</label>
+        <select id="filter-src-floor" class="form-select">
+          <option value="">All</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table to display all listings from src sheet -->
+    <table class="table table-bordered mt-3" id="src-listings-table">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Price</th>
+          <th>Area</th>
+          <th>Rooms</th>
+          <th>Floor</th>
+          <th>Max Floor</th>
+          <th>ReportDate</th>
+<!--          <th>AdText</th>-->
+<!--          <th>AISays</th>-->
+<!--          <th>GoToLink</th>-->
+        </tr>
+      </thead>
+      <tbody>
+        {% if src_listings %}
+          {% for listing in src_listings %}
+            <tr>
+              <td><a href="{{ listing['URL'] }}" target="_blank">GoToLink</a></td>
+              <td>{{ listing['Price'] }}</td>
+              <td>{{ listing['Area'] }}</td>
+              <td>{{ listing['Rooms'] }}</td>
+              <td>{{ listing['Floor'] }}</td>
+              <td>{{ listing['Max Floor'] }}</td>
+              <td>{{ listing['ReportDate'] }}</td>
+<!--              <td>{{ listing['AdText'] }}</td>-->
+<!--              <td>{{ listing['AISays'] }}</td>-->
+<!--              <td><a href="{{ listing['GoToLink'] }}" target="_blank">Go</a></td>-->
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="10">No data available.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Update filters with unique column values
+    function updateFilters(listings, prefix) {
+      let priceOptions = new Set();
+      let areaOptions = new Set();
+      let roomsOptions = new Set();
+      let floorOptions = new Set();
+
+      listings.forEach(function(listing) {
+        if (listing.Price) priceOptions.add(listing.Price);
+        if (listing.Area) areaOptions.add(listing.Area);
+        if (listing.Rooms) roomsOptions.add(listing.Rooms);
+        if (listing.Floor) floorOptions.add(listing.Floor);
+      });
+
+      // Update dropdowns with options
+      $("#" + prefix + "-price").html("<option value=''>All</option>" + Array.from(priceOptions).map(function(option) {
+        return "<option value='" + option + "'>" + option + "</option>";
+      }).join(""));
+
+      $("#" + prefix + "-area").html("<option value=''>All</option>" + Array.from(areaOptions).map(function(option) {
+        return "<option value='" + option + "'>" + option + "</option>";
+      }).join(""));
+
+      $("#" + prefix + "-rooms").html("<option value=''>All</option>" + Array.from(roomsOptions).map(function(option) {
+        return "<option value='" + option + "'>" + option + "</option>";
+      }).join(""));
+
+      $("#" + prefix + "-floor").html("<option value=''>All</option>" + Array.from(floorOptions).map(function(option) {
+        return "<option value='" + option + "'>" + option + "</option>";
+      }).join(""));
+    }
+
+    // Apply filters on the tables
+    function applyFilters(tableId, prefix) {
+      let price = $("#" + prefix + "-price").val();
+      let area = $("#" + prefix + "-area").val();
+      let rooms = $("#" + prefix + "-rooms").val();
+      let floor = $("#" + prefix + "-floor").val();
+
+      $("#" + tableId + " tbody tr").each(function() {
+        var row = $(this);
+        var rowPrice = row.find("td:nth-child(2)").text();
+        var rowArea = row.find("td:nth-child(3)").text();
+        var rowRooms = row.find("td:nth-child(4)").text();
+        var rowFloor = row.find("td:nth-child(5)").text();
+
+        var match = true;
+
+        if (price && rowPrice !== price) match = false;
+        if (area && rowArea !== area) match = false;
+        if (rooms && rowRooms !== rooms) match = false;
+        if (floor && rowFloor !== floor) match = false;
+
+        row.toggle(match);
+      });
+    }
+
+    // Filter event listeners
+    $("#filter-price, #filter-area, #filter-rooms, #filter-floor").on("change", function() {
+      applyFilters("new-listings-table", "filter");
+    });
+
+    $("#filter-src-price, #filter-src-area, #filter-src-rooms, #filter-src-floor").on("change", function() {
+      applyFilters("src-listings-table", "filter-src");
+    });
+
+    $(document).ready(function() {
+      // Update filters when page loads
+      updateFilters({{ new_listings|tojson }}, "filter");
+      updateFilters({{ src_listings|tojson }}, "filter-src");
+    });
+  </script>
+
+</body>
+</html>
