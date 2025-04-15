@@ -10,17 +10,34 @@ class DataProcessor:
         return f'=HYPERLINK("{url}", "ClickToGo")'
 
     @staticmethod
-    def append_new_rows(df_old, df_new):
+    def append_new_rows(df_old, df_new, compare_col="url"):
         """
-        Find rows in df_new that don't exist in df_old based on URL.
+        Find rows in df_new that don't exist in df_old based on the compare_col.
         Returns a DataFrame of new rows.
         """
-        compare_col = "URL"
+        # First, check if the column exists in both DataFrames
+        if compare_col not in df_old.columns or compare_col not in df_new.columns:
+            print(f"Warning: '{compare_col}' column missing in one or both DataFrames")
+            print(f"df_old columns: {df_old.columns.tolist()}")
+            print(f"df_new columns: {df_new.columns.tolist()}")
 
-        # Find URLs that are in df_new but not in df_old
-        new_urls = df_new[~df_new[compare_col].isin(df_old[compare_col])]
+            # Choose a fallback column if available
+            if len(df_old.columns) > 0 and len(df_new.columns) > 0:
+                common_cols = set(df_old.columns).intersection(set(df_new.columns))
+                if common_cols:
+                    compare_col = list(common_cols)[0]
+                    print(f"Using '{compare_col}' as alternative comparison column")
+                else:
+                    # No common columns, can't compare
+                    print("No common columns found, cannot find new rows")
+                    return df_new.iloc[0:0]  # Return empty DataFrame with same structure
+            else:
+                return df_new.iloc[0:0]  # Return empty DataFrame with same structure
 
-        return new_urls
+        # Find rows in df_new that aren't in df_old based on the comparison column
+        new_rows = df_new[~df_new[compare_col].isin(df_old[compare_col])]
+
+        return new_rows
 
     @staticmethod
     def process_floor_data(df):
@@ -33,7 +50,7 @@ class DataProcessor:
         """Add hyperlink formulas and current date to DataFrame."""
         import datetime as dt
 
-        df["GoToLink"] = df["URL"].apply(lambda x: DataProcessor.create_hyperlink(x))
+        df["GoToLink"] = df["url"].apply(lambda x: DataProcessor.create_hyperlink(x))
         df["ReportDate"] = dt.date.today()
         return df
 
@@ -44,9 +61,9 @@ class DataProcessor:
         Returns new_ads and removed_ads DataFrames.
         """
         # Identify new listings by comparing URLs
-        new_ads = df_today[~df_today["URL"].isin(df_ytd["URL"])]
+        new_ads = df_today[~df_today["url"].isin(df_ytd["url"])]
 
         # Identify removed listings by comparing URLs
-        removed_ads = df_ytd[~df_ytd["URL"].isin(df_today["URL"])]
+        removed_ads = df_ytd[~df_ytd["url"].isin(df_today["url"])]
 
         return new_ads, removed_ads

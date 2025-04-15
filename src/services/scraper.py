@@ -70,7 +70,7 @@ class Scraper:
                                 features["floor"] = self.roman_converter.convert_mixed_numerals(value)
 
                         ads.append({
-                            "URL": href,
+                            "url": href,
                             "Price": price,
                             "Area": features["Area"],
                             "Rooms": features["Rooms"],
@@ -130,13 +130,17 @@ class Scraper:
         Returns the DataFrame with updated ad descriptions.
         """
         df["AdText2"] = df.apply(
-            lambda row: self.scrape_single_ad(row["URL"])
+            lambda row: self.scrape_single_ad(row["url"])
             if pd.isna(row.get("AdText")) or not row.get("AdText")
             else row.get("AdText"),
             axis=1
         )
 
+        if "AdText" not in df.columns:
+            df["AdText"] = ""
+
         df["AdText"] = df["AdText"].fillna(df["AdText2"])
+
         df = df.drop(columns=["AdText2"])
 
         return df

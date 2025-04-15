@@ -1,11 +1,12 @@
-from src.config import Config
-from src.core.roman_converter import RomanConverter
-from src.core.data_processor import DataProcessor
-from src.services.scraper import Scraper
-from src.utils.file_manager import FileManager
-from src.core.apartment_tracker import ApartmentTracker
-from src.services.ai_analyzer import AIAnalyzer
-from src.secretconfig import APIKEY, PROMPTTXT
+from config import Config
+from core.roman_converter import RomanConverter
+from core.data_processor import DataProcessor
+from services.scraper import Scraper
+from utils.file_manager import FileManager
+from utils.database_manager import DatabaseManager
+from core.apartment_tracker import ApartmentTracker
+from services.ai_analyzer import AIAnalyzer
+from secretconfig import APIKEY, PROMPTTXT
 
 
 def main():
@@ -16,6 +17,7 @@ def main():
     data_processor = DataProcessor()
     scraper = Scraper(config, roman_converter)
     file_manager = FileManager(config)
+    database_manager = DatabaseManager(config)
 
     # Set to True to enable AI analysis
     DO_AI_STUFF = False
@@ -32,6 +34,7 @@ def main():
         data_processor=data_processor,
         scraper=scraper,
         file_manager=file_manager,
+        database_manager=database_manager,
         ai_analyzer=ai_analyzer
     )
 

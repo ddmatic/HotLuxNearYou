@@ -21,6 +21,8 @@ class Config:
         # URL and request headers for scraping
         # Set filters on https://www.halooglasi.com/nekretnine for your search and replace SRC
         self.SRC = "https://www.halooglasi.com/nekretnine/izdavanje-stanova?grad_id_l-lokacija_id_l-mikrolokacija_id_l=40761%2C40784%2C40788%2C59345&cena_d_from=450&cena_d_to=600&cena_d_unit=4&kvadratura_d_from=40&kvadratura_d_unit=1&ostalo_id_ls=12100016"
+        # Shorter list of apts in case of testing
+        # self.SRC = "https://www.halooglasi.com/nekretnine/izdavanje-stanova?grad_id_l-lokacija_id_l-mikrolokacija_id_l=40761%2C40784%2C40788%2C59345&cena_d_from=450&cena_d_to=450&cena_d_unit=4&kvadratura_d_from=40&kvadratura_d_unit=1&ostalo_id_ls=12100016"
         self.PGR = "&page="
         self.HEADERS = {"User-Agent": "Mozilla/5.0"}
 
