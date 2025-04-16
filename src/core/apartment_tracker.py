@@ -22,7 +22,10 @@ class ApartmentTracker:
         # Create necessary directories
         self.file_manager.create_directories()
 
-        # Scrape listings
+        # Clear the new_listings table at the start of each run
+        self.database_manager.clear_new_listings_table()
+
+        # Scrape basic listing data
         ads = self.scraper.scrape_listings()
 
         # Convert to DataFrame and process floor data
@@ -31,6 +34,9 @@ class ApartmentTracker:
 
         # Try to load active listings from database
         db_listings = self.database_manager.get_all_active_listings()
+
+        # Initialize new_rows for tracking new listings
+        new_rows = None
 
         if db_listings is not None and not db_listings.empty:
             print(f"Loaded {len(db_listings)} active listings from database")
@@ -41,26 +47,62 @@ class ApartmentTracker:
             new_rows = self.data_processor.append_new_rows(db_listings, df_today)
             new_rows = new_rows.dropna(axis=1, how="all")
 
+            print(f"Found {len(new_rows)} new listings to process")
 
-            print(f"db_listings: {db_listings.columns}")
-            print(f"df_today: {df_today.columns}")
             # Find removed listings (in database but not in today's scrape)
             removed_urls = db_listings.loc[~db_listings["url"].isin(df_today["url"]), "url"].tolist()
 
             # Mark removed listings in database
             self.database_manager.mark_listings_as_removed(removed_urls)
 
+            # Update existing listings with new scraped data
+            # First, get matching rows
+            existing_rows = df_today[df_today["url"].isin(db_listings["url"])]
+
+            # Ensure we have AdText column in both dataframes for merging
+            if "AdText" not in existing_rows.columns:
+                existing_rows["AdText"] = ""
+
+            if "AdText" not in db_listings.columns:
+                db_listings["AdText"] = ""
+
+            # Merge with database listings to preserve existing AdText values
+            existing_rows = self.data_processor.merge_with_db_listings(existing_rows, db_listings)
+
+            # If new_rows don't have AdText column, add it
+            if len(new_rows) > 0 and "AdText" not in new_rows.columns:
+                new_rows["AdText"] = ""
+
             # Combine existing and new listings
-            df_today = pd.concat([db_listings, new_rows])
+            df_today = pd.concat([existing_rows, new_rows])
         else:
             # No existing data in database
             print("No existing data in database. Using fresh scrape data.")
+            new_rows = df_today.copy()  # All listings are new
             removed_urls = []
 
-        # Scrape ad descriptions for new listings
-        df_today = self.scraper.scrape_ad_descriptions(df_today)
+        # Only scrape ad descriptions for new listings
+        if new_rows is not None and not new_rows.empty:
+            print(f"Scraping descriptions for {len(new_rows)} new listings...")
+            new_rows = self.scraper.scrape_ad_descriptions(new_rows)
 
-        # Add hyperlinks and date
+            # Update the new rows in df_today
+            if "AdText" in new_rows.columns:
+                for index, row in new_rows.iterrows():
+                    mask = df_today["url"] == row["url"]
+                    if any(mask):
+                        df_today.loc[mask, "AdText"] = row["AdText"]
+
+            # Add hyperlinks and date to new rows before saving to new_listings table
+            new_rows = self.data_processor.add_hyperlinks_and_date(new_rows)
+
+            # Save new listings to the new_listings table
+            self.database_manager.save_new_listings(new_rows)
+
+            # Copy new listings to the main listings table
+            self.database_manager.copy_new_listings_to_main()
+
+        # Add hyperlinks and date to all listings
         df_today = self.data_processor.add_hyperlinks_and_date(df_today)
 
         # Perform AI analysis if enabled

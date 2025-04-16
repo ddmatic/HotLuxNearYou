@@ -13,6 +13,7 @@ class Config:
         # Paths for the Excel files
         self.TDY_PATH = os.path.join(self.DATA_DIR, "apts_tdy.xlsx")
         self.YTD_PATH = os.path.join(self.DATA_DIR, "apts_ytd.xlsx")
+        self.DB_PATH = os.path.join(self.DATA_DIR, "apartment_tracker.db")
 
         # .bat File Location
         self.BAT_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),

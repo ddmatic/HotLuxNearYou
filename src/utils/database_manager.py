@@ -1,228 +1,177 @@
-import sqlite3
 import pandas as pd
-import os
-from datetime import datetime
+import sqlite3
+import datetime as dt
 
 
 class DatabaseManager:
-    """Handles all database operations for the apartment tracker."""
+    """Handles database operations for apartment listings."""
 
     def __init__(self, config):
-        """Initialize with configuration object."""
-        self.config = config
-        self.db_path = os.path.join(self.config.DATA_DIR, "apartment_tracker.db")
-        self.setup_database()
+        """Initialize with database path."""
+        self.db_path = config.DB_PATH
+        self.create_tables_if_not_exist()
 
-    def setup_database(self):
-        """Create database tables if they don't exist."""
+    def create_tables_if_not_exist(self):
+        """Create tables if they don't already exist."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Create listings table
+        # Create the main listings table
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS listings (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT UNIQUE,
-            price REAL,
-            area REAL,
-            rooms TEXT,
-            floor TEXT,
-            max_floor TEXT,
-            ad_text TEXT,
-            report_date DATE,
-            ai_analysis TEXT,
-            go_to_link TEXT
+            Price TEXT,
+            Area TEXT,
+            Rooms TEXT,
+            Floor TEXT,
+            "Max Floor" TEXT,
+            AdText TEXT,
+            GoToLink TEXT,
+            ReportDate TEXT,
+            is_active INTEGER DEFAULT 1,
+            removed_date TEXT,
+            add_date TEXT
         )
         ''')
 
-        # Create a table for tracking listing status
+        # Create the new_listings table with the same structure
         cursor.execute('''
-        CREATE TABLE IF NOT EXISTS listing_history (
-            id INTEGER PRIMARY KEY,
-            url TEXT,
-            status TEXT,
-            change_date DATE,
-            FOREIGN KEY (url) REFERENCES listings (url)
+        CREATE TABLE IF NOT EXISTS new_listings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE,
+            Price TEXT,
+            Area TEXT,
+            Rooms TEXT,
+            Floor TEXT,
+            "Max Floor" TEXT,
+            AdText TEXT,
+            GoToLink TEXT,
+            ReportDate TEXT,
+            is_active INTEGER DEFAULT 1,
+            removed_date TEXT,
+            add_date TEXT
         )
         ''')
 
         conn.commit()
         conn.close()
 
-        print(f"Database initialized at {self.db_path}")
-
-    def save_listings(self, df):
-        """Save DataFrame listings to the database."""
+    def clear_new_listings_table(self):
+        """Delete all records from the new_listings table."""
         conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
 
-        # Convert DataFrame to format suitable for database
-        df_to_save = df.copy()
-        df_to_save['report_date'] = pd.to_datetime(df_to_save['ReportDate']).dt.date
+        cursor.execute("DELETE FROM new_listings")
 
-        # Map DataFrame columns to database columns
-        columns_mapping = {
-            'url': 'url',
-            'Price': 'price',
-            'Area': 'area',
-            'Rooms': 'rooms',
-            'Floor': 'floor',
-            'Max Floor': 'max_floor',
-            'AdText': 'ad_text',
-            'AISays': 'ai_analysis',
-            'GoToLink': 'go_to_link',
-            'report_date': 'report_date'
-        }
+        conn.commit()
+        conn.close()
+        print("Cleared all records from new_listings table")
 
-        # Select and rename columns for database insertion
-        df_db = df_to_save[[col for col in columns_mapping.keys() if col in df_to_save.columns]]
-        df_db = df_db.rename(columns=columns_mapping)
-
-        # 🚨 NEW: Filter out duplicate URLs that already exist in DB
-        existing_urls = pd.read_sql_query("SELECT url FROM listings", conn)['url'].tolist()
-        df_db = df_db[~df_db['url'].isin(existing_urls)]
-
-        if df_db.empty:
-            print("No new listings to save.")
+    def get_all_active_listings(self):
+        """Retrieve all active listings from the database."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            query = "SELECT * FROM listings WHERE is_active = 1"
+            df = pd.read_sql_query(query, conn)
             conn.close()
+            return df
+        except Exception as e:
+            print(f"Error retrieving listings from database: {str(e)}")
+            return None
+
+    def save_new_listings(self, df_new):
+        """
+        Save new listings to the new_listings table.
+        """
+        if df_new.empty:
+            print("No new listings to save.")
             return
 
-        # Insert data into the database
-        df_db.to_sql('listings', conn, if_exists='append', index=False)
+        try:
+            conn = sqlite3.connect(self.db_path)
 
-        # Record listing history
-        today = datetime.now().date()
-        for url in df_db['url']:
-            cursor = conn.cursor()
+            # Add add_date column with current date if it doesn't exist
+            if "add_date" not in df_new.columns:
+                df_new["add_date"] = dt.date.today().isoformat()
+
+            # Add is_active column if it doesn't exist
+            if "is_active" not in df_new.columns:
+                df_new["is_active"] = 1
+
+            # Save to database, replace if the URL already exists
+            df_new.to_sql("new_listings", conn, if_exists="append", index=False)
+
+            conn.close()
+            print(f"Successfully saved {len(df_new)} new listings to new_listings table")
+        except Exception as e:
+            print(f"Error saving new listings to database: {str(e)}")
+
+    def copy_new_listings_to_main(self):
+        """
+        Copy all records from new_listings to the main listings table.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            # Insert records from new_listings into listings, ignoring duplicates by URL
             cursor.execute('''
-            INSERT INTO listing_history (url, status, change_date)
-            VALUES (?, ?, ?)
-            ''', (url, 'active', today))
+            INSERT OR IGNORE INTO listings 
+            (url, Price, Area, Rooms, Floor, "Max Floor", AdText, GoToLink, ReportDate, is_active, removed_date, add_date)
+            SELECT url, Price, Area, Rooms, Floor, "Max Floor", AdText, GoToLink, ReportDate, is_active, removed_date, add_date
+            FROM new_listings
+            ''')
 
-        conn.commit()
-        conn.close()
+            copied_count = cursor.rowcount
+            conn.commit()
+            print(f"Successfully copied {copied_count} new listings to main listings table")
 
-        print(f"Saved {len(df_db)} new listings to database")
+        except Exception as e:
+            print(f"Error copying new listings to main table: {str(e)}")
+        finally:
+            conn.close()
 
-    def mark_listings_as_removed(self, removed_urls):
-        """Mark listings as removed in the database."""
-        if not removed_urls or len(removed_urls) == 0:
+    def save_listings(self, df):
+        """Save all listings to the database."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+
+            # Add add_date column with current date if it doesn't exist
+            if "add_date" not in df.columns:
+                df["add_date"] = dt.date.today().isoformat()
+
+            # Add is_active column if it doesn't exist
+            if "is_active" not in df.columns:
+                df["is_active"] = 1
+
+            # Save to database, replace if the URL already exists
+            df.to_sql("listings", conn, if_exists="replace", index=False)
+
+            conn.close()
+            print(f"Successfully saved {len(df)} listings to database")
+        except Exception as e:
+            print(f"Error saving listings to database: {str(e)}")
+
+    def mark_listings_as_removed(self, url_list):
+        """Mark listings as inactive and set removed date."""
+        if not url_list:
             return
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        today = datetime.now().date()
 
-        for url in removed_urls:
-            cursor.execute('''
-            INSERT INTO listing_history (url, status, change_date)
-            VALUES (?, ?, ?)
-            ''', (url, 'removed', today))
+        try:
+            today = dt.date.today().isoformat()
+            for url in url_list:
+                cursor.execute(
+                    "UPDATE listings SET is_active = 0, removed_date = ? WHERE url = ?",
+                    (today, url)
+                )
 
-        conn.commit()
-        conn.close()
-
-        print(f"Marked {len(removed_urls)} listings as removed")
-
-    def get_all_active_listings(self):
-        """Retrieve all currently active listings from the database."""
-        conn = sqlite3.connect(self.db_path)
-
-        # Get the most recent status for each URL
-        query = '''
-        SELECT l.*, 
-               (SELECT status FROM listing_history h 
-                WHERE h.url = l.url 
-                ORDER BY change_date DESC LIMIT 1) as status
-        FROM listings l
-        WHERE status = 'active'
-        '''
-
-        df = pd.read_sql_query(query, conn)
-
-        # Rename columns back to application format
-        columns_mapping = {
-            'url': 'url',
-            'price': 'Price',
-            'area': 'Area',
-            'rooms': 'Rooms',
-            'floor': 'Floor',
-            'max_floor': 'Max Floor',
-            'ad_text': 'AdText',
-            'ai_analysis': 'AISays',
-            'go_to_link': 'GoToLink',
-            'report_date': 'ReportDate'
-        }
-
-        df = df.rename(columns={v: k for k, v in columns_mapping.items() if v in df.columns})
-
-        conn.close()
-        return df
-
-    def get_new_listings_since(self, date):
-        """Get listings that were added after the specified date."""
-        conn = sqlite3.connect(self.db_path)
-
-        query = '''
-        SELECT l.* FROM listings l
-        JOIN listing_history h ON l.url = h.url
-        WHERE h.status = 'active'
-        AND h.change_date >= ?
-        AND h.id IN (
-            SELECT MIN(id) FROM listing_history
-            WHERE url = l.url
-            GROUP BY url
-        )
-        '''
-
-        df = pd.read_sql_query(query, conn, params=(date,))
-
-        # Rename columns back to application format
-        columns_mapping = {
-            'url': 'url',
-            'price': 'Price',
-            'area': 'Area',
-            'rooms': 'Rooms',
-            'floor': 'Floor',
-            'max_floor': 'Max Floor',
-            'ad_text': 'AdText',
-            'ai_analysis': 'AISays',
-            'go_to_link': 'GoToLink',
-            'report_date': 'ReportDate'
-        }
-
-        df = df.rename(columns={v: k for k, v in columns_mapping.items() if v in df.columns})
-
-        conn.close()
-        return df
-
-    def get_removed_listings_since(self, date):
-        """Get listings that were removed after the specified date."""
-        conn = sqlite3.connect(self.db_path)
-
-        query = '''
-        SELECT l.* FROM listings l
-        JOIN listing_history h ON l.url = h.url
-        WHERE h.status = 'removed'
-        AND h.change_date >= ?
-        '''
-
-        df = pd.read_sql_query(query, conn, params=(date,))
-
-        # Rename columns back to application format
-        columns_mapping = {
-            'url': 'url',
-            'price': 'Price',
-            'area': 'Area',
-            'rooms': 'Rooms',
-            'floor': 'Floor',
-            'max_floor': 'Max Floor',
-            'ad_text': 'AdText',
-            'ai_analysis': 'AISays',
-            'go_to_link': 'GoToLink',
-            'report_date': 'ReportDate'
-        }
-
-        df = df.rename(columns={v: k for k, v in columns_mapping.items() if v in df.columns})
-
-        conn.close()
-        return df
+            conn.commit()
+            print(f"Marked {len(url_list)} listings as removed")
+        except Exception as e:
+            print(f"Error marking listings as removed: {str(e)}")
+        finally:
+            conn.close()

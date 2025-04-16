@@ -40,6 +40,26 @@ class DataProcessor:
         return new_rows
 
     @staticmethod
+    def merge_with_db_listings(df_scraped, df_db, key_col="url"):
+        """
+        Merge scraped listings with database listings to preserve text descriptions.
+        Returns merged DataFrame with updated information and preserved descriptions.
+        """
+        # Create a copy to avoid modifying the original
+        result = df_scraped.copy()
+
+        # Iterate through rows to preserve AdText from database
+        for index, row in result.iterrows():
+            # Find matching row in database
+            db_row = df_db[df_db[key_col] == row[key_col]]
+            if not db_row.empty:
+                # Copy AdText from database if it exists
+                if "AdText" in db_row.columns and not pd.isna(db_row["AdText"].iloc[0]):
+                    result.at[index, "AdText"] = db_row["AdText"].iloc[0]
+
+        return result
+
+    @staticmethod
     def process_floor_data(df):
         """Split the floor column into Floor and Max Floor columns."""
         df[["Floor", "Max Floor"]] = df["floor"].str.split("/", expand=True)

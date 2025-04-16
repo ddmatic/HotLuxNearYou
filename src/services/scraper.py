@@ -121,26 +121,26 @@ class Scraper:
         finally:
             driver.quit()
 
-        print("Done!")
+        print(f"Done scraping description for URL: {url}")
         return description_text
 
     def scrape_ad_descriptions(self, df):
         """
         Process a DataFrame to scrape missing ad descriptions.
+        Only scrapes descriptions for new listings based on URL.
         Returns the DataFrame with updated ad descriptions.
         """
-        df["AdText2"] = df.apply(
-            lambda row: self.scrape_single_ad(row["url"])
-            if pd.isna(row.get("AdText")) or not row.get("AdText")
-            else row.get("AdText"),
-            axis=1
-        )
-
+        # Ensure AdText column exists
         if "AdText" not in df.columns:
             df["AdText"] = ""
 
-        df["AdText"] = df["AdText"].fillna(df["AdText2"])
+        # Count new listings before starting
+        new_listings = df[df["AdText"].isna() | (df["AdText"] == "")]
+        print(f"Found {len(new_listings)} listings that need description scraping")
 
-        df = df.drop(columns=["AdText2"])
+        # Only scrape descriptions for rows where AdText is empty or null
+        for index, row in new_listings.iterrows():
+            print(f"Scraping description for listing {index + 1}/{len(new_listings)}: {row['url']}")
+            df.at[index, "AdText"] = self.scrape_single_ad(row["url"])
 
         return df
