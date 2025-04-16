@@ -1,0 +1,58 @@
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --bg-dark: #0f172a;
+    --bg-darker: #0a0f1c;
+    --text-light: #01aaf6;
+    --accent: #00b894;
+    --danger: #ff7675;
+    --card-bg: rgba(15, 23, 42, 0.8);
+}
+
+/* Custom styles for the register page */
+body {
+    background: linear-gradient(to right, var(--accent), var(--primary-color));
+    color: var(--text-light);
+}
+
+.register-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.register-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    background-color: rgba(108, 92, 231, 0.2);
+    border: 1px solid var(--primary-color);
+    border-radius: 5px;
+    color: var(--text-light);
+}
+
+.btn-success {
+    background-color: var(--accent);
+    border: none;
+    color: #fff;
+    width: 100%;
+    padding: 10px;
+}
+
+.btn-success:hover {
+    background-color: var(--secondary-color);
+}
+
+.register-container a {
+    color: var(--text-light);
+    text-decoration: underline;
+}
+
+.register-container a:hover {
+    color: #fff;
+}
