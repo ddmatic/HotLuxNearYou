@@ -220,6 +220,7 @@ def get_listings():
         return jsonify({"error": str(e)})
     conn.close()
 
+
     if 'url' in df.columns:
         df['url'] = df['url'].apply(lambda x: f'<a href="{x}" target="_blank" class="btn btn-sm btn-primary">View</a>')
 
