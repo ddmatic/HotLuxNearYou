@@ -9,6 +9,7 @@ from src.services.ai_analyzer import AIAnalyzer
 from src.secretconfig import APIKEY, PROMPTTXT
 
 
+
 def main():
     """Main function to run the apartment tracking application."""
     # Initialize components
