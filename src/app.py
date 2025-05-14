@@ -8,18 +8,21 @@ import sqlite3
 import sys
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from waitress import serve
 
 # Add 'src' to sys.path to import custom modules properly
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+# sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from config import Config
-from core.roman_converter import RomanConverter
-from core.data_processor import DataProcessor
-from services.scraper import Scraper
-from utils.file_manager import FileManager
-from utils.database_manager import DatabaseManager
-from utils.sql_queries import listings_table_sql, new_listings_table_sql
-from core.apartment_tracker import ApartmentTracker
+sys.path.append(os.path.abspath('/app'))
+
+from src.config import Config
+from src.core.roman_converter import RomanConverter
+from src.core.data_processor import DataProcessor
+from src.services.scraper import Scraper
+from src.utils.file_manager import FileManager
+from src.utils.database_manager import DatabaseManager
+from src.utils.sql_queries import listings_table_sql, new_listings_table_sql
+from src.core.apartment_tracker import ApartmentTracker
 
 # Initialize Flask
 app = Flask(__name__)
@@ -244,4 +247,5 @@ def scraper_status():
 
 if __name__ == '__main__':
     print("Starting Flask app with DB:", config.DB_PATH)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True, host='0.0.0.0', port=8080)
+    serve(app, host="0.0.0.0", port=8080)

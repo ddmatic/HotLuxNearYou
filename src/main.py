@@ -1,12 +1,12 @@
-from config import Config
-from core.roman_converter import RomanConverter
-from core.data_processor import DataProcessor
-from services.scraper import Scraper
-from utils.file_manager import FileManager
-from utils.database_manager import DatabaseManager
-from core.apartment_tracker import ApartmentTracker
-from services.ai_analyzer import AIAnalyzer
-from secretconfig import APIKEY, PROMPTTXT
+from src.config import Config
+from src.core.roman_converter import RomanConverter
+from src.core.data_processor import DataProcessor
+from src.services.scraper import Scraper
+from src.utils.file_manager import FileManager
+from src.utils.database_manager import DatabaseManager
+from src.core.apartment_tracker import ApartmentTracker
+from src.services.ai_analyzer import AIAnalyzer
+from src.secretconfig import APIKEY, PROMPTTXT
 
 
 def main():

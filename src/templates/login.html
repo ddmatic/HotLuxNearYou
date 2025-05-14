@@ -45,5 +45,30 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+
+
+<div id="welcomePopup" class="popup-overlay">
+    <div class="popup-content">
+        <h3>Welcome to 🔥✨HotLuxNearYou!</h3>
+        <p>IMPORTANT: Scraping functionlaity is currently out of order since Selenium is not working properly with Fly Dev Hosting</p>
+        <p>Database is preloaded for demo purposes</p>
+        <p>User: Admin</p>
+        <p>Pass: Admin</p>
+        <button id="closePopupBtn" class="btn btn-primary">OK</button>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', function () {
+        const popup = document.getElementById('welcomePopup');
+        const closeBtn = document.getElementById('closePopupBtn');
+
+        popup.style.display = 'flex';
+
+        closeBtn.addEventListener('click', function () {
+            popup.style.display = 'none';
+        });
+    });
+</script>
 </body>
 </html>

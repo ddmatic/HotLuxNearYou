@@ -93,6 +93,7 @@ class Scraper:
 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument(f"--user-data-dir=/app/.selenium_cache")
         driver = webdriver.Chrome(options=chrome_options)
 
         try:
